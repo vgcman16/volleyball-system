@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: volleyball_web
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/volleyball_db
+      - SECRET_KEY=${SECRET_KEY:-default-secret-key}
+      - MAIL_SERVER=${MAIL_SERVER:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USE_TLS=${MAIL_USE_TLS:-true}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+    volumes:
+      - ./logs:/app/logs
+      - ./app/static/profile_pics:/app/app/static/profile_pics
+      - ./app/static/uploads:/app/app/static/uploads
+    depends_on:
+      - db
+      - redis
+    networks:
+      - volleyball_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: postgres:13-alpine
+    container_name: volleyball_db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=volleyball_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - volleyball_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6-alpine
+    container_name: volleyball_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - volleyball_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: volleyball_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./app/static:/usr/share/nginx/html/static
+    depends_on:
+      - web
+    networks:
+      - volleyball_network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: volleyball_pgadmin
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL:-admin@example.com}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - volleyball_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  volleyball_network:
+    driver: bridge
+
+# Development-only services (commented out for production)
+#  mailhog:
+#    image: mailhog/mailhog
+#    container_name: volleyball_mailhog
+#    ports:
+#      - "1025:1025"
+#      - "8025:8025"
+#    networks:
+#      - volleyball_network
+
+#  adminer:
+#    image: adminer
+#    container_name: volleyball_adminer
+#    restart: always
+#    ports:
+#      - "8080:8080"
+#    networks:
+#      - volleyball_network
+#    depends_on:
+#      - db

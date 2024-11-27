@@ -1,0 +1,72 @@
+# Include all template files
+recursive-include app/templates *
+
+# Include all static files
+recursive-include app/static *
+
+# Include configuration files
+include requirements.txt
+include README.md
+include pytest.ini
+include config.py
+
+# Include test files
+recursive-include tests *
+
+# Include database migrations
+recursive-include migrations *
+
+# Include documentation
+recursive-include docs *
+
+# Include license file
+include LICENSE
+
+# Exclude development and system files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude __pycache__
+global-exclude *.so
+global-exclude *.egg
+global-exclude *.egg-info
+global-exclude *.egg-info/*
+global-exclude .git*
+global-exclude .pytest_cache
+global-exclude .coverage
+global-exclude htmlcov
+global-exclude .env
+global-exclude *.db
+global-exclude *.sqlite
+global-exclude .DS_Store
+global-exclude .idea/*
+global-exclude .vscode/*
+global-exclude *.swp
+global-exclude *.swo
+
+# Include specific directories that should be created
+recursive-include app/static/profile_pics .gitkeep
+recursive-include app/static/uploads .gitkeep
+recursive-include logs .gitkeep
+
+# Include database migration scripts
+recursive-include migrations *.py
+recursive-include migrations/versions *.py
+
+# Include email templates
+recursive-include app/templates/email *.html
+recursive-include app/templates/email *.txt
+
+# Include error page templates
+recursive-include app/templates/errors *.html
+
+# Include auth templates
+recursive-include app/templates/auth *.html
+
+# Include main templates
+recursive-include app/templates/main *.html
+
+# Include static assets
+recursive-include app/static/css *.css
+recursive-include app/static/js *.js
+recursive-include app/static/img *
